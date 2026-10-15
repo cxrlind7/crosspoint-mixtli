@@ -15,6 +15,8 @@ Firmware para el lector **Xteink X4 / X3** basado en [CrossPoint Reader](https:/
 2. Pon tu control o mouse en modo emparejamiento y selecciónalo.
 3. En **Asignar botones del control** elige *Página siguiente* / *Página anterior* y pulsa el botón (o gira la rueda) que quieras usar.
 
+✅ Probado en un X4 con un **mouse Bluetooth Logitech**: clics, rueda y reconexión automática funcionando.
+
 Para ahorrar memoria el Bluetooth solo está encendido **dentro de un libro** y en la pantalla de Bluetooth. Si el mouse está dormido, muévelo o haz clic para que se reconecte.
 
 Si emparejaste el mouse con una versión anterior de este firmware, **olvídalo** (mantén pulsado sobre él en *Dispositivos emparejados*) y vuelve a emparejarlo.
