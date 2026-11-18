@@ -107,6 +107,8 @@ El firmware queda en `.pio/build/gh_release/firmware.bin`.
 
 ## Instalar en el lector
 
+No hace falta compilar: descarga el `.bin` más reciente en [Releases](https://github.com/cxrlind7/crosspoint-mixtli/releases/latest).
+
 1. Conecta el X4 a la computadora con un cable USB-C de datos.
 2. Abre <https://crosspointreader.com/#flash-tools> en Chrome o Edge.
 3. Elige **X4**, pulsa **Custom .bin** y sube `firmware.bin`.
