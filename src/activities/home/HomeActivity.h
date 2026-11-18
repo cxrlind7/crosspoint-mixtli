@@ -34,8 +34,12 @@ class HomeActivity final : public Activity {
   const HomeMenuItem initialMenuItem;
   const bool cleanInitialRefresh;
 
+  // Mixtli: "Receive via Bluetooth" and the Bluetooth on/off row are list-home only
+  // (the cover-grid home has a fixed five-tab bar).
+  bool hasBtItems = false;
+
   // Convert HomeMenuItem to menu index (used in onEnter)
-  static int menuItemToIndex(HomeMenuItem item, bool hasOpdsUrl) {
+  static int menuItemToIndex(HomeMenuItem item, bool hasOpdsUrl, bool hasBt) {
     int i = 0;
     if (item == HomeMenuItem::FILE_BROWSER) return i;
     ++i;
@@ -43,19 +47,26 @@ class HomeActivity final : public Activity {
     ++i;
     if (item == HomeMenuItem::OPDS_BROWSER) return hasOpdsUrl ? i : 0;
     if (hasOpdsUrl) ++i;
-    if (item == HomeMenuItem::FILE_TRANSFER) return i;
-    ++i;
+    if (item == HomeMenuItem::BT_RECEIVE) return hasBt ? i : 0;
+    if (hasBt) ++i;
+    // With the Bluetooth items, Receive replaces File Transfer on Home.
+    if (item == HomeMenuItem::FILE_TRANSFER) return hasBt ? 0 : i;
+    if (!hasBt) ++i;
+    if (item == HomeMenuItem::BT_TOGGLE) return hasBt ? i : 0;
+    if (hasBt) ++i;
     if (item == HomeMenuItem::SETTINGS_MENU) return i;
     return 0;
   }
 
   // Convert menu index to HomeMenuItem (used in loop)
-  static HomeMenuItem indexToMenuItem(int idx, bool hasOpdsUrl) {
+  static HomeMenuItem indexToMenuItem(int idx, bool hasOpdsUrl, bool hasBt) {
     int i = 0;
     if (idx == i++) return HomeMenuItem::FILE_BROWSER;
     if (idx == i++) return HomeMenuItem::LIBRARY;
     if (hasOpdsUrl && idx == i++) return HomeMenuItem::OPDS_BROWSER;
-    if (idx == i++) return HomeMenuItem::FILE_TRANSFER;
+    if (hasBt && idx == i++) return HomeMenuItem::BT_RECEIVE;
+    if (!hasBt && idx == i++) return HomeMenuItem::FILE_TRANSFER;
+    if (hasBt && idx == i++) return HomeMenuItem::BT_TOGGLE;
     if (idx == i) return HomeMenuItem::SETTINGS_MENU;
     return HomeMenuItem::NONE;
   }
@@ -65,6 +76,8 @@ class HomeActivity final : public Activity {
   void onSettingsOpen();
   void onFileTransferOpen();
   void onOpdsBrowserOpen();
+  void onBleReceiveOpen();
+  void onBluetoothToggle();
 
   int getMenuItemCount() const;
   bool storeCoverBuffer();    // Store frame buffer for cover image

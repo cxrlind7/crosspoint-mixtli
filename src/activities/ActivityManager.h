@@ -17,7 +17,16 @@
 class Activity;    // forward declaration
 class RenderLock;  // forward declaration
 
-enum class HomeMenuItem { NONE, FILE_BROWSER, LIBRARY, OPDS_BROWSER, FILE_TRANSFER, SETTINGS_MENU };
+enum class HomeMenuItem {
+  NONE,
+  FILE_BROWSER,
+  LIBRARY,
+  OPDS_BROWSER,
+  BT_RECEIVE,
+  FILE_TRANSFER,
+  BT_TOGGLE,
+  SETTINGS_MENU
+};
 
 /**
  * ActivityManager
@@ -82,6 +91,7 @@ class ActivityManager {
 
   // goTo... functions are convenient wrapper for replaceActivity()
   void goToFileTransfer();
+  void goToBleReceive();
   void goToUsbDrive();
   void goToSettings();
   void goToFileBrowser(std::string path = {});

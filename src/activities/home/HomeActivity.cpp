@@ -33,6 +33,9 @@ int HomeActivity::getMenuItemCount() const {
   if (hasOpdsServers) {
     count++;
   }
+  if (hasBtItems) {
+    count += 1;  // Receive via Bluetooth replaces File Transfer, plus Bluetooth on/off
+  }
   return count;
 }
 
@@ -236,6 +239,7 @@ void HomeActivity::onEnter() {
     coverGridUi = makeUniqueNoThrow<CoverGridHomeUi>(renderer);
     if (!coverGridUi) LOG_ERR("HOME", "OOM: cover grid UI; using standard home");
   }
+  hasBtItems = !coverGridUi;
   loadRecentBooks(coverGridUi ? CoverGridHomeUi::MAX_BOOKS : metrics.homeRecentBooksCount);
   hasContinueReading = !recentBooks.empty();
   if (coverGridUi) {
@@ -245,7 +249,7 @@ void HomeActivity::onEnter() {
   }
 
   const auto base = static_cast<int>(recentBooks.size());
-  selectorIndex = initialMenuItem == HomeMenuItem::NONE ? 0 : base + menuItemToIndex(initialMenuItem, hasOpdsServers);
+  selectorIndex = initialMenuItem == HomeMenuItem::NONE ? 0 : base + menuItemToIndex(initialMenuItem, hasOpdsServers, hasBtItems);
 
   // Trigger first update
   requestUpdate();
@@ -306,7 +310,7 @@ void HomeActivity::loop() {
       return;
     }
     const int menuIndex = selectorIndex - static_cast<int>(recentBooks.size());
-    switch (indexToMenuItem(menuIndex, hasOpdsServers)) {
+    switch (indexToMenuItem(menuIndex, hasOpdsServers, hasBtItems)) {
       case HomeMenuItem::FILE_BROWSER:
         onFileBrowserOpen();
         break;
@@ -316,8 +320,14 @@ void HomeActivity::loop() {
       case HomeMenuItem::OPDS_BROWSER:
         onOpdsBrowserOpen();
         break;
+      case HomeMenuItem::BT_RECEIVE:
+        onBleReceiveOpen();
+        break;
       case HomeMenuItem::FILE_TRANSFER:
         onFileTransferOpen();
+        break;
+      case HomeMenuItem::BT_TOGGLE:
+        onBluetoothToggle();
         break;
       case HomeMenuItem::SETTINGS_MENU:
         onSettingsOpen();
@@ -516,6 +526,18 @@ void HomeActivity::render(RenderLock&&) {
     menuIcons.insert(menuIcons.begin() + 2, Blocks);
   }
 
+  // Order must match indexToMenuItem(): Receive takes File Transfer's slot, the
+  // Bluetooth toggle goes right before Settings.
+  std::string btToggleLabel;
+  if (hasBtItems) {
+    btToggleLabel = std::string(tr(STR_BLUETOOTH)) + ": " +
+                    (SETTINGS.bluetoothEnabled ? tr(STR_STATE_ON) : tr(STR_STATE_OFF));
+    const int transferPos = hasOpdsServers ? 3 : 2;
+    menuItems[transferPos] = tr(STR_BT_RECEIVE);
+    menuItems.insert(menuItems.end() - 1, btToggleLabel.c_str());
+    menuIcons.insert(menuIcons.end() - 1, Hotspot);
+  }
+
   if (metrics.homeContinueReadingInMenu && !recentBooks.empty()) {
     // Insert Continue Reading at the top if enabled in theme
     menuItems.insert(menuItems.begin(), tr(STR_CONTINUE_READING));
@@ -559,3 +581,13 @@ void HomeActivity::onSettingsOpen() { activityManager.goToSettings(); }
 void HomeActivity::onFileTransferOpen() { activityManager.goToFileTransfer(); }
 
 void HomeActivity::onOpdsBrowserOpen() { activityManager.goToBrowser(); }
+
+void HomeActivity::onBleReceiveOpen() { activityManager.goToBleReceive(); }
+
+// Flip the page-turner preference only; the main-loop lifecycle starts/stops the
+// BLE HID host to match (it runs in the reader, not on Home).
+void HomeActivity::onBluetoothToggle() {
+  SETTINGS.bluetoothEnabled = SETTINGS.bluetoothEnabled ? 0 : 1;
+  SETTINGS.saveToFile();
+  requestUpdate();
+}
